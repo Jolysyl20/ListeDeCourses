@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Création d'un tableau HTML avec JS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="offset-3 col-6 pt-4">
+        <div>  
+            <!-- integration du tableau avec template-->
+            
+            <input id="article" placeholder="Ajouter un article" />
+            <button class="btn btn-success" onclick="ajouter()">
+            <i class="fa fa-plus"></i>
+            </button>
+        </div>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>liste</th>
+              <th>Etat</th>
+              <th colspan="2">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Template-->
+    <template id="ligneTableau">
+      <tr>
+        <td class="name">poire</td>
+        <td class="status">true</td>
+        <td>
+          <button class="btn btn-primary" onclick="check(this)">
+            <i class="fa fa-check"></i>
+          </button>
+        </td>
+        <td>
+          <button class="btn btn-danger"onclick="effacer(this)">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    </template>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+      integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script>
+      let url = "http://localhost/ListeDeCourses/back/public/api/listes";
+      //----------------------
+      function getLigne(liste) {
+        let template = document.getElementById("ligneTableau");
+        // je clone le template
+        let clone = template.content.cloneNode(true);
+        // je met le clone dans le tbody
+        clone.querySelector(".name").innerHTML = liste.title;
+        clone.querySelector(".status").innerHTML = liste.IsBought;
+        clone.querySelector("tr").setAttribute("data-id", liste.id);
+        return clone; //<tr>...</tr>
+      }
+
+      function ajouter() {
+        let tbody = document.getElementById("tbody");
+        let input = document.getElementById("article").value;
+        let body = {  title: input };
+        
+        axios.post(url, body).then((response) =>{ 
+            let liste = response.data;
+            let tr = getLigne(liste);
+            tbody.appendChild(tr); 
+         });
+        
+      }
+      // Rechercher le tableau JS de listes.
+      axios.get(url).then((response) => {
+        let listes = response.data;
+        //console.log(listes);
+        for (let liste of listes) {
+          console.log(liste);
+          let tr = getLigne(liste);
+          tbody.appendChild(tr);
+        }
+      });
+      function check(element) {
+        let tr = element.parentElement.parentElement;
+        let id = tr.dataset.id;
+        let status = element.parentElement.parentElement.querySelector(".status").innerHTML ;
+        urlPut = url +"/"+ id;
+        console.log(urlPut)
+        axios.put(urlPut).then((response) => { 
+            let listes = response.data;
+            if (status == "true") 
+                {
+                    element.parentElement.parentElement.querySelector(".status").innerHTML = "false";
+                }else
+                {
+                    element.parentElement.parentElement.querySelector(".status").innerHTML = "true";
+                }
+            // element.parentElement.parentElement.remove();
+            });
+      }
+      
+      function effacer(element) {
+        let tr = element.parentElement.parentElement;
+        let id = tr.dataset.id;
+        console.log(id);
+        urlDel = url +"/"+ id;
+       
+        axios.delete(urlDel).then((response) => { 
+            tr.remove();
+        //element.remove(); // effacer le bouton
+        // effacer le tr
+        // btn ->td -> tr
+        // element.parentElement.parentElement.remove();
+    });
+      }
+    </script>
+  </body>
+</html>
